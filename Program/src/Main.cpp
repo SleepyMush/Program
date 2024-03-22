@@ -14,8 +14,12 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 unsigned int VBO, VAO, EBO;
-std::vector<float> vertices;
 void CreateQuad();
+
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+float playerSpeed = 1.0f;
+float fps;
 
 extern "C" {
 	__declspec(dllexport) uint32_t NvOptimusEnablement = 1;
@@ -41,11 +45,7 @@ struct Vertex
 	glm::vec2 texCoords;
 };
 
-struct Quad
-{
-	/*Transform transform;*/
-	std::array<Vertex, 6> vertices;
-};
+std::vector<Vertex> vertices;
 
 struct Entity
 {
@@ -57,10 +57,8 @@ Transform transform;
 float LO = -1.0f;
 float HI = 1.0f;
 
-std::vector<Quad> quads;
 void CreateQuad()
 {
-	Quad q;
 	Vertex v0;
 	Vertex v1;
 	Vertex v2;
@@ -73,13 +71,114 @@ void CreateQuad()
 	v1.texCoords = glm::vec2(1.0f, 1.0f);
 	v2.texCoords = glm::vec2(0.0f, 1.0f);
 	v3.texCoords = glm::vec2(0.0f, 0.0f);
-	q.vertices.at(0) = v0;
-	q.vertices.at(1) = v1;
-	q.vertices.at(2) = v3;
-	q.vertices.at(3) = v1;
-	q.vertices.at(4) = v2;
-	q.vertices.at(5) = v3;
+	vertices.push_back(v0);
+	vertices.push_back(v1);
+	vertices.push_back(v3);
+	vertices.push_back(v1);
+	vertices.push_back(v2);
+	vertices.push_back(v3);
 }
+
+int main() {
+	glfwInit();
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+	glfwWindowHint(GLFW_OPENGL_PROFILE,GLFW_OPENGL_CORE_PROFILE);
+
+	GLFWwindow* window = glfwCreateWindow(1920, 1080, "Program", NULL, NULL); 
+	if (window == NULL)
+	{
+		std::cout << "GLFW Context is incorrect" << std::endl;
+		glfwTerminate();
+		return -1;
+	}
+	glfwMakeContextCurrent(window);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	{
+		std::cout << "Failed to initialize GLAD" << std::endl;
+		return -1;
+	}
+
+	Shader shader("Resource Folder/Shader/Shader.vert","Resource Folder/Shader/Shader.frag");
+	stbi_set_flip_vertically_on_load(false);
+	Texture image("Resource Folder/Textures/download.png");
+
+	glGenBuffers(1, &VBO);
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, 100 * 1024 * 1024, NULL, GL_DYNAMIC_DRAW);
+
+	// position attribute
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 1 * sizeof(Vertex),(void*)offsetof(Vertex, position));
+	glEnableVertexAttribArray(0);
+
+	// texture coord attribute
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 1 * sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
+	glEnableVertexAttribArray(1);
+	
+	//GLint location = glGetAttribLocation(shader.ID, "Position");
+	//glVertexAttribPointer(location, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+	//glEnableVertexAttribArray(location);
+
+	for (int i = 0; i < 10; ++i) {
+		float r3 = LO + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (HI - LO)));
+		float r4 = LO + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (HI - LO)));
+		CreateQuad();
+	}
+
+	CreateQuad();
+
+	while (!glfwWindowShouldClose(window))
+	{
+		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		shader.use();
+		unsigned int transformLoc = glGetUniformLocation(shader.ID, "transform");
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform.to_mat4()));
+
+		float currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+		fps = 1.0f / deltaTime;
+
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		{
+			transform.position.x += playerSpeed * deltaTime;
+		}
+
+		image.bind(0);
+		//glBindVertexArray(VAO);
+		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, 100 * 1024 * 1024, NULL, GL_DYNAMIC_DRAW);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		shader.use();
+		glBindVertexArray(VAO);
+		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+
+	image.cleanUp();
+	glfwTerminate();
+	return 0;
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+	glViewport(0, 0, width, height);
+}
+
 
 static void add_vertices(std::vector<float>& v, float x, float y) {
 
@@ -108,77 +207,3 @@ static void add_vertices(std::vector<float>& v, float x, float y) {
 	glEnableVertexAttribArray(1);
 	glBindVertexArray(0);
 };
-
-int main() {
-	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-	glfwWindowHint(GLFW_OPENGL_PROFILE,GLFW_OPENGL_CORE_PROFILE);
-
-	GLFWwindow* window = glfwCreateWindow(1920, 1080, "Program", NULL, NULL); 
-	if (window == NULL)
-	{
-		std::cout << "GLFW Context is incorrect" << std::endl;
-		glfwTerminate();
-		return -1;
-	}
-	glfwMakeContextCurrent(window);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-	{
-		std::cout << "Failed to initialize GLAD" << std::endl;
-		return -1;
-	}
-	Shader shader("Resource Folder/Shader/Shader.vert","Resource Folder/Shader/Shader.frag");
-	Texture image("Resource Folder/Textures/download.png");
-	stbi_set_flip_vertically_on_load(true);
-	add_vertices(vertices, 0.0, 0.0);
-	
-	GLint location = glGetAttribLocation(shader.ID, "Position");
-	glVertexAttribPointer(location, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-	glEnableVertexAttribArray(location);
-
-	//for (int i = 0; i < 10; ++i) {
-	//	float r3 = LO + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (HI - LO)));
-	//	float r4 = LO + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (HI - LO)));
-	//	add_vertices(vertices, r3, r4);
-	//}
-
-	while (!glfwWindowShouldClose(window))
-	{
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		shader.use();
-		unsigned int transformLoc = glGetUniformLocation(shader.ID, "transform");
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform.to_mat4()));
-
-		image.bind(0);
-		//glBindVertexArray(VAO);
-		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(100 * 1024) * 1024, NULL, GL_STREAM_DRAW);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(float), vertices.data());
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-		shader.use();
-		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 6);
-
-		glfwSwapBuffers(window);
-		glfwPollEvents();
-	}
-
-	image.cleanUp();
-	glfwTerminate();
-	return 0;
-}
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-	glViewport(0, 0, width, height);
-}
-
-
