@@ -14,7 +14,7 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 unsigned int VBO, VAO, EBO;
-void CreateQuad();
+//void CreateQuad(const Transform& t);
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -59,7 +59,7 @@ Transform transform;
 float LO = -1.0f;
 float HI = 1.0f;
 
-void CreateQuad()
+void CreateQuad(const Transform& t)
 {
 	Vertex v0;
 	Vertex v1;
@@ -79,6 +79,8 @@ void CreateQuad()
 	vertices.push_back(v1);
 	vertices.push_back(v2);
 	vertices.push_back(v3);
+
+	transforms.push_back(t.to_mat4());
 }
 
 int main() {
@@ -135,8 +137,7 @@ int main() {
 		float r3 = LO + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (HI - LO)));
 		float r4 = LO + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (HI - LO)));
 		t.position = glm::vec3(r3, r4, 0.0f);
-		transforms.push_back(t.to_mat4());
-		CreateQuad();
+		CreateQuad(t);
 	}
 
 	//CreateQuad();
@@ -190,6 +191,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
 }
+
+
 
 
 //static void add_vertices(std::vector<float>& v, float x, float y) {
