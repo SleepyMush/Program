@@ -1,9 +1,9 @@
+#include <array>
+#include <cmath>
 #include <glad/glad.h> 
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include <cmath>
 #include <vector>
-#include <array>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -20,6 +20,8 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 float playerSpeed = 1.0f;
 float fps;
+
+std::vector<glm::mat4> transforms;
 
 extern "C" {
 	__declspec(dllexport) uint32_t NvOptimusEnablement = 1;
@@ -47,11 +49,11 @@ struct Vertex
 
 std::vector<Vertex> vertices;
 
-struct Entity
-{
-	Transform transform;
-	size_t quadOffset;
-};
+//struct Entity
+//{
+//	Transform transform;
+//	size_t quadOffset;
+//};
 
 Transform transform;
 float LO = -1.0f;
@@ -119,18 +121,25 @@ int main() {
 	// texture coord attribute
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 1 * sizeof(Vertex), (void*)offsetof(Vertex, texCoords));
 	glEnableVertexAttribArray(1);
-	
-	//GLint location = glGetAttribLocation(shader.ID, "Position");
-	//glVertexAttribPointer(location, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-	//glEnableVertexAttribArray(location);
 
+	GLuint SSBO;
+	glGenBuffers(1, &SSBO);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, 100 * 1024 * 1024, NULL, GL_DYNAMIC_DRAW);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, SSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); 
+
+	
 	for (int i = 0; i < 10; ++i) {
+		Transform t;
 		float r3 = LO + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (HI - LO)));
 		float r4 = LO + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (HI - LO)));
+		t.position = glm::vec3(r3, r4, 0.0f);
+		transforms.push_back(t.to_mat4());
 		CreateQuad();
 	}
 
-	CreateQuad();
+	//CreateQuad();
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -139,7 +148,12 @@ int main() {
 
 		shader.use();
 		unsigned int transformLoc = glGetUniformLocation(shader.ID, "transform");
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform.to_mat4()));
+		glUniformMatrix4fv(transformLoc, 2, GL_FALSE, glm::value_ptr(transform.to_mat4()));
+
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, 100 * 1024 * 1024, NULL, GL_DYNAMIC_DRAW);
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, transforms.size() * sizeof(glm::mat4), transforms.data());
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
@@ -153,8 +167,6 @@ int main() {
 		}
 
 		image.bind(0);
-		//glBindVertexArray(VAO);
-		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
 		glBufferData(GL_ARRAY_BUFFER, 100 * 1024 * 1024, NULL, GL_DYNAMIC_DRAW);
@@ -180,30 +192,30 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 }
 
 
-static void add_vertices(std::vector<float>& v, float x, float y) {
-
-	float vertices[] = {
-		// positions         // colors
-		0.5f + x, -0.5f + y, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
-		-0.5f + x, -0.5f + y, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
-		0.0f + x,  0.5f + y, 0.0f,  0.0f, 0.0f, 1.0f    // top 
-	};
-
-	v.insert(v.end(), std::begin(vertices), std::end(vertices));
-
-	glGenBuffers(1, &VBO);
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(100 * 1024) * 1024, NULL, GL_DYNAMIC_DRAW);
-
-	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	// color attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	glBindVertexArray(0);
-};
+//static void add_vertices(std::vector<float>& v, float x, float y) {
+//
+//	float vertices[] = {
+//		// positions         // colors
+//		0.5f + x, -0.5f + y, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
+//		-0.5f + x, -0.5f + y, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
+//		0.0f + x,  0.5f + y, 0.0f,  0.0f, 0.0f, 1.0f    // top 
+//	};
+//
+//	v.insert(v.end(), std::begin(vertices), std::end(vertices));
+//
+//	glGenBuffers(1, &VBO);
+//	glGenVertexArrays(1, &VAO);
+//	glBindVertexArray(VAO);
+//
+//	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+//	glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(100 * 1024) * 1024, NULL, GL_DYNAMIC_DRAW);
+//
+//	// position attribute
+//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+//	glEnableVertexAttribArray(0);
+//
+//	// color attribute
+//	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+//	glEnableVertexAttribArray(1);
+//	glBindVertexArray(0);
+//};

@@ -1,16 +1,18 @@
 #version 460 core
 layout (location = 0) in vec2 Position;
-//layout (location = 1) in vec3 Color;
 layout (location = 1) in vec2 aTexCoord;
 
-//out vec3 ourColor;
+layout(std430, binding = 2) buffer Transform
+{
+    mat4 transforms[];
+};
+
 out vec2 TexCoord;
 
 uniform mat4 transform;
 
 void main()
 {
-    gl_Position = transform * vec4(Position, 0.0, 1.0);
-    //ourColor = Color;
+    gl_Position = transforms[int(floor(gl_VertexID / 6))] * vec4(Position, 0.0, 1.0);
     TexCoord = aTexCoord;
 }
