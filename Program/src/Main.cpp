@@ -23,12 +23,7 @@ float lastFrame = 0.0f;
 float playerSpeed = 1.0f;
 float fps;
 
-
 float Zoom = 500.0f;
-float left = -screen_Width / (2.0f * Zoom);
-float right = screen_Width / (2.0f * Zoom);
-float bottom = -Screen_Height / (2.0f * Zoom);
-float top = Screen_Height / (2.0f * Zoom);
 
 std::vector<glm::mat4> transforms;
 
@@ -154,10 +149,14 @@ int main() {
 		unsigned int transformLoc = glGetUniformLocation(shader.ID, "transform");
 		glUniformMatrix4fv(transformLoc, 2, GL_FALSE, glm::value_ptr(transform.to_mat4()));
 
+		float left = -screen_Width / (2.0f * Zoom);
+		float right = screen_Width / (2.0f * Zoom);
+		float bottom = -Screen_Height / (2.0f * Zoom);
+		float top = Screen_Height / (2.0f * Zoom);
+
 		glm::mat4 view = glm::mat4(1.0f);
 		glm::mat4 projection = glm::mat4(1.0f);
 
-		//projection = glm::ortho(0.0f, 1920.0f / Zoom, 0.0f, 1080.0f / Zoom, -0.1f, 100.0f);
 		projection = glm::ortho(left, right, bottom, top, -0.1f, 100.0f);
 		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 
@@ -204,6 +203,6 @@ int main() {
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
-	width = screen_Width;
-	height = Screen_Height;
+	screen_Width = width;
+	Screen_Height = height;
 }
