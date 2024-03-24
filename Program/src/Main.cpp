@@ -1,9 +1,9 @@
-#include <array>
-#include <cmath>
 #include <glad/glad.h> 
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <vector>
+#include <array>
+#include <cmath>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -14,12 +14,21 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 unsigned int VBO, VAO, EBO;
-//void CreateQuad(const Transform& t);
+
+int screen_Width = 1920;
+int Screen_Height = 1080;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 float playerSpeed = 1.0f;
 float fps;
+
+
+float Zoom = 500.0f;
+float left = -screen_Width / (2.0f * Zoom);
+float right = screen_Width / (2.0f * Zoom);
+float bottom = -Screen_Height / (2.0f * Zoom);
+float top = Screen_Height / (2.0f * Zoom);
 
 std::vector<glm::mat4> transforms;
 
@@ -48,12 +57,6 @@ struct Vertex
 };
 
 std::vector<Vertex> vertices;
-
-//struct Entity
-//{
-//	Transform transform;
-//	size_t quadOffset;
-//};
 
 Transform transform;
 float LO = -1.0f;
@@ -89,7 +92,7 @@ int main() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE,GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(1920, 1080, "Program", NULL, NULL); 
+	GLFWwindow* window = glfwCreateWindow(screen_Width, Screen_Height, "Program", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "GLFW Context is incorrect" << std::endl;
@@ -151,6 +154,16 @@ int main() {
 		unsigned int transformLoc = glGetUniformLocation(shader.ID, "transform");
 		glUniformMatrix4fv(transformLoc, 2, GL_FALSE, glm::value_ptr(transform.to_mat4()));
 
+		glm::mat4 view = glm::mat4(1.0f);
+		glm::mat4 projection = glm::mat4(1.0f);
+
+		//projection = glm::ortho(0.0f, 1920.0f / Zoom, 0.0f, 1080.0f / Zoom, -0.1f, 100.0f);
+		projection = glm::ortho(left, right, bottom, top, -0.1f, 100.0f);
+		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+		shader.setMat4("projection", projection);
+		shader.setMat4("view", view);
+
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
 		glBufferData(GL_SHADER_STORAGE_BUFFER, 100 * 1024 * 1024, NULL, GL_DYNAMIC_DRAW);
 		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, transforms.size() * sizeof(glm::mat4), transforms.data());
@@ -175,6 +188,7 @@ int main() {
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 		shader.use();
+
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 
@@ -190,35 +204,6 @@ int main() {
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
+	width = screen_Width;
+	height = Screen_Height;
 }
-
-
-
-
-//static void add_vertices(std::vector<float>& v, float x, float y) {
-//
-//	float vertices[] = {
-//		// positions         // colors
-//		0.5f + x, -0.5f + y, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
-//		-0.5f + x, -0.5f + y, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
-//		0.0f + x,  0.5f + y, 0.0f,  0.0f, 0.0f, 1.0f    // top 
-//	};
-//
-//	v.insert(v.end(), std::begin(vertices), std::end(vertices));
-//
-//	glGenBuffers(1, &VBO);
-//	glGenVertexArrays(1, &VAO);
-//	glBindVertexArray(VAO);
-//
-//	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-//	glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(100 * 1024) * 1024, NULL, GL_DYNAMIC_DRAW);
-//
-//	// position attribute
-//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-//	glEnableVertexAttribArray(0);
-//
-//	// color attribute
-//	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-//	glEnableVertexAttribArray(1);
-//	glBindVertexArray(0);
-//};

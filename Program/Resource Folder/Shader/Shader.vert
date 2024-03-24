@@ -10,9 +10,11 @@ layout(std430, binding = 2) buffer Transform
 out vec2 TexCoord;
 
 uniform mat4 transform;
+uniform mat4 view;
+uniform mat4 projection;
 
 void main()
 {
-    gl_Position = transforms[int(floor(gl_VertexID / 6))] * vec4(Position, 0.0, 1.0);
+    gl_Position = projection * view * transforms[int(floor(gl_VertexID / 6))] * vec4(Position, 0.0, 1.0);
     TexCoord = aTexCoord;
 }
