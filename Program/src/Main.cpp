@@ -57,16 +57,16 @@ Transform transform;
 float LO = -1.0f;
 float HI = 1.0f;
 
-void CreateQuad(const Transform& t)
+void CreateQuad(const Transform& t, float width, float height)
 {
 	Vertex v0;
 	Vertex v1;
 	Vertex v2;
 	Vertex v3;
-	v0.position = glm::vec2(0.5f, 0.5f);
-	v1.position = glm::vec2(0.5f, -0.5f);
-	v2.position = glm::vec2(-0.5f, -0.5f);
-	v3.position = glm::vec2(-0.5f, 0.5f);
+	v0.position = glm::vec2(0.5f * width, 0.5f * height);
+	v1.position = glm::vec2(0.5f * width, -0.5f * height);
+	v2.position = glm::vec2(-0.5f * width, -0.5f * height);
+	v3.position = glm::vec2(-0.5f * width, 0.5f * height);
 	v0.texCoords = glm::vec2(1.0f, 0.0f);
 	v1.texCoords = glm::vec2(1.0f, 1.0f);
 	v2.texCoords = glm::vec2(0.0f, 1.0f);
@@ -135,7 +135,7 @@ int main() {
 		float r3 = LO + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (HI - LO)));
 		float r4 = LO + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (HI - LO)));
 		t.position = glm::vec3(r3, r4, 0.0f);
-		CreateQuad(t);
+		CreateQuad(t, 1.6f, 0.9f);
 	}
 
 	//CreateQuad();
