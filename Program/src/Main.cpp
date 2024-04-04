@@ -13,6 +13,7 @@
 #include "/Program1/Program/Header Files/Texture.hpp"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void processInput(GLFWwindow* window);
 unsigned int VBO, VAO, EBO;
 
 int screen_Width = 1920;
@@ -57,8 +58,11 @@ Transform transform;
 float LO = -1.0f;
 float HI = 1.0f;
 
-void CreateQuad(const Transform& t, float width, float height)
+void CreateQuad(const Transform& t, float width, float height, float Sprite_Width, float Sprite_height)
 {
+	float x = 0, y = 2;
+	float sheet_Width = 260.0f, sheet_height = 261.0f;
+
 	Vertex v0;
 	Vertex v1;
 	Vertex v2;
@@ -67,10 +71,10 @@ void CreateQuad(const Transform& t, float width, float height)
 	v1.position = glm::vec2(0.5f * width, -0.5f * height);
 	v2.position = glm::vec2(-0.5f * width, -0.5f * height);
 	v3.position = glm::vec2(-0.5f * width, 0.5f * height);
-	v0.texCoords = glm::vec2(1.0f, 0.0f);
-	v1.texCoords = glm::vec2(1.0f, 1.0f);
-	v2.texCoords = glm::vec2(0.0f, 1.0f);
-	v3.texCoords = glm::vec2(0.0f, 0.0f);
+	v0.texCoords = glm::vec2((x * Sprite_Width) / sheet_Width, (y * Sprite_height) / sheet_height);
+	v1.texCoords = glm::vec2(((x * 1) + Sprite_Width) / sheet_Width, (y * Sprite_height) / sheet_height);
+	v2.texCoords = glm::vec2(((x * 1) + Sprite_Width) / sheet_Width, ((y * 1) + Sprite_height) / sheet_height);
+	v3.texCoords = glm::vec2((x * Sprite_Width) / sheet_Width, ((y * 1) + Sprite_height) / sheet_height);
 	vertices.push_back(v0);
 	vertices.push_back(v1);
 	vertices.push_back(v3);
@@ -105,7 +109,7 @@ int main() {
 
 	Shader shader("Resource Folder/Shader/Shader.vert","Resource Folder/Shader/Shader.frag");
 	stbi_set_flip_vertically_on_load(false);
-	Texture image("Resource Folder/Textures/download.png");
+	Texture image("Resource Folder/Textures/spritesheet.jpg");
 
 	glGenBuffers(1, &VBO);
 	glGenVertexArrays(1, &VAO);
@@ -130,20 +134,28 @@ int main() {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); 
 
 	
-	for (int i = 0; i < 10; ++i) {
-		Transform t;
-		float r3 = LO + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (HI - LO)));
-		float r4 = LO + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (HI - LO)));
-		t.position = glm::vec3(r3, r4, 0.0f);
-		CreateQuad(t, 1.6f, 0.9f);
-	}
+	//for (int i = 0; i < 10; ++i) {
+	//	Transform t;
+	//	float r3 = LO + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (HI - LO)));
+	//	float r4 = LO + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (HI - LO)));
+	//	t.position = glm::vec3(r3, r4, 0.0f);
+	//	CreateQuad(t, 1.6f, 0.9f);
+	//}
 
-	//CreateQuad();
+	Transform t;
+	CreateQuad(t, 1.6f, 0.9f, 58.0f, 65.0f);
 
 	while (!glfwWindowShouldClose(window))
 	{
+		processInput(window);
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		float currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+		fps = 1.0f / deltaTime;
 
 		shader.use();
 		unsigned int transformLoc = glGetUniformLocation(shader.ID, "transform");
@@ -167,17 +179,6 @@ int main() {
 		glBufferData(GL_SHADER_STORAGE_BUFFER, 100 * 1024 * 1024, NULL, GL_DYNAMIC_DRAW);
 		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, transforms.size() * sizeof(glm::mat4), transforms.data());
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-		float currentFrame = glfwGetTime();
-		deltaTime = currentFrame - lastFrame;
-		lastFrame = currentFrame;
-
-		fps = 1.0f / deltaTime;
-
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		{
-			transform.position.x += playerSpeed * deltaTime;
-		}
 
 		image.bind(0);
 
@@ -205,4 +206,13 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	glViewport(0, 0, width, height);
 	screen_Width = width;
 	Screen_Height = height;
+}
+
+void processInput(GLFWwindow* window)
+{
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
+
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		transform.position.x += playerSpeed * deltaTime;
 }

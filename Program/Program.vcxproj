@@ -173,6 +173,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resource Folder\Textures\download.png" />
+    <Image Include="Resource Folder\Textures\spritesheet.jpg" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resource Folder\Shader\Shader.frag" />

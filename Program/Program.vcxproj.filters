@@ -15,13 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\stb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -35,6 +35,9 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resource Folder\Textures\download.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resource Folder\Textures\spritesheet.jpg">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
