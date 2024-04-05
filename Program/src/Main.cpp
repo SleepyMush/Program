@@ -60,7 +60,7 @@ float HI = 1.0f;
 
 void CreateQuad(const Transform& t, float width, float height, float Sprite_Width, float Sprite_height)
 {
-	float x = 0, y = 2;
+	float x = 2, y = 4;
 	float sheet_Width = 260.0f, sheet_height = 261.0f;
 
 	Vertex v0;
@@ -71,10 +71,10 @@ void CreateQuad(const Transform& t, float width, float height, float Sprite_Widt
 	v1.position = glm::vec2(0.5f * width, -0.5f * height);
 	v2.position = glm::vec2(0.5f * width, 0.5f * height);
 	v3.position = glm::vec2(-0.5f * width, 0.5f * height);
-	v0.texCoords = glm::vec2((x * Sprite_Width) / sheet_Width, (y * Sprite_height) / sheet_height);
-	v1.texCoords = glm::vec2(((x + 1) + Sprite_Width) / sheet_Width, (y * Sprite_height) / sheet_height);
-	v2.texCoords = glm::vec2(((x + 1) + Sprite_Width) / sheet_Width, ((y + 1) + Sprite_height) / sheet_height);
-	v3.texCoords = glm::vec2((x * Sprite_Width) / sheet_Width, ((y + 1) + Sprite_height) / sheet_height);
+	v0.texCoords = glm::vec2((x + 0.f) * (Sprite_Width / sheet_Width), (y + 1.f) * (Sprite_height / sheet_height));
+	v1.texCoords = glm::vec2((x + 1.f) * (Sprite_Width / sheet_Width), (y + 1.f) * (Sprite_height / sheet_height));
+	v2.texCoords = glm::vec2((x + 1.f) * (Sprite_Width / sheet_Width), (y + 0.f) * (Sprite_height / sheet_height));
+	v3.texCoords = glm::vec2((x + 0.f) * (Sprite_Width / sheet_Width), (y + 0.f) * (Sprite_height / sheet_height));
 	vertices.push_back(v0);
 	vertices.push_back(v1);
 	vertices.push_back(v3);
@@ -139,11 +139,11 @@ int main() {
 	//	float r3 = LO + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (HI - LO)));
 	//	float r4 = LO + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (HI - LO)));
 	//	t.position = glm::vec3(r3, r4, 0.0f);
-	//	CreateQuad(t, 1.6f, 0.9f);
+	//	CreateQuad(t, 1.0f, 1.0f, 65.0f, 65.0f);
 	//}
 
 	Transform t;
-	CreateQuad(t, 1.6f, 0.9f, 58.0f, 65.0f);
+	CreateQuad(t, 1.0f, 1.0f, 65.0f, 65.0f);
 
 	while (!glfwWindowShouldClose(window))
 	{
